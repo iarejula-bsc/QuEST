@@ -13,7 +13,7 @@ int main(void) {
     initQuESTEnv();
     reportQuESTEnv();
 
-    Qureg qureg = createForcedQureg(20);
+    Qureg qureg = createForcedQureg(4);
     reportQuregParams(qureg);
 
     initRandomPureState(qureg);
