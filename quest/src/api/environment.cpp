@@ -18,6 +18,7 @@
 #include "quest/src/core/validation.hpp"
 #include "quest/src/core/randomiser.hpp"
 #include "quest/src/comm/comm_config.hpp"
+#include "quest/src/malleability/malleability.hpp"
 #include "quest/src/cpu/cpu_config.hpp"
 #include "quest/src/gpu/gpu_config.hpp"
 
@@ -93,8 +94,12 @@ void validateAndInitCustomQuESTEnv(int useDistrib, int useGpuAccel, int useMulti
     // and before any GPU initialisation and validation, since we will
     // perform that specifically upon the MPI-process-bound GPU(s). Further,
     // we can make sure validation errors are reported only by the root node.
-    if (useDistrib)
+    if (useDistrib){
         comm_init();
+        //this only works if ENABLE_MALLEABILITY is on,
+        //eitherway does nothing
+        init_malleability();
+    }
 
     validate_newEnvDistributedBetweenPower2Nodes(caller);
 

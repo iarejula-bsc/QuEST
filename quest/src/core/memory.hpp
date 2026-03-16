@@ -69,6 +69,7 @@ int mem_getMaxNumSuperOpQubitsWhichCanFitInMemory(qindex memBytesPerNode);
 
 
 int mem_getMinNumQubitsForDistribution(int numNodes);
+int mem_getMaxNumNodesForQubits(int numQubits);
 
 
 int mem_getMaxNumQuregQubitsBeforeIndexOverflow(bool isDensityMatrix);

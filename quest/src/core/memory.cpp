@@ -94,6 +94,10 @@ int mem_getMinNumQubitsForDistribution(int numNodes) {
     return logBase2(numNodes);
 }
 
+int mem_getMaxNumNodesForQubits(int numQubits) {
+    return powerOf2(numQubits);
+}
+
 
 int mem_getMaxNumQuregQubitsBeforeIndexOverflow(bool isDensityMatrix) {
 

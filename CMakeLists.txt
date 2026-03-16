@@ -147,6 +147,15 @@ option(
 message(STATUS "Distribution is turned ${ENABLE_DISTRIBUTION}. Set ENABLE_DISTRIBUTION to modify.")
 
 
+# Malleability
+option(
+  ENABLE_MALLEABILITY
+  "Whether QuEST will trim MPI ranks at startup via DMRlib when oversized for the given Qureg. Turned OFF by default."
+  OFF
+)
+message(STATUS "Malleability is turned ${ENABLE_MALLEABILITY}. Set ENABLE_MALLEABILITY to modify.")
+
+
 # GPU Acceleration
 option(
   ENABLE_CUDA
@@ -206,6 +215,10 @@ if (ENABLE_CUQUANTUM AND NOT ENABLE_CUDA)
   message(FATAL_ERROR "Use of cuQuantum requires CUDA.")
 endif()
 
+
+if (ENABLE_MALLEABILITY AND NOT ENABLE_DISTRIBUTION)
+  message(FATAL_ERROR "ENABLE_MALLEABILITY requires ENABLE_DISTRIBUTION=ON (DMR operates over MPI).")
+endif()
 
 if(WIN32)
   
@@ -388,6 +401,53 @@ if (ENABLE_DISTRIBUTION)
     MPI::MPI_CXX
   )
 endif()
+
+if (ENABLE_MALLEABILITY)
+
+  # Require DMR_DIR to be explicitly provided — no guessing
+  if (NOT DMR_DIR)
+    message(FATAL_ERROR 
+      "ENABLE_MALLEABILITY requires -DDMR_DIR=/path/to/dmrlib to be set.")
+  endif()
+
+  find_path(DMR_INCLUDE_DIR
+    NAMES dmr.h
+    HINTS ${DMR_DIR}/include ${DMR_DIR}
+    DOC "Path to dmrib headers"
+  )
+  if (NOT DMR_INCLUDE_DIR)
+    message(FATAL_ERROR 
+      "ENABLE_MALLEABILITY: found DMR_DIR=${DMR_DIR} but could not find dmr.h inside it.")
+  endif()
+
+  find_library(DMR_LIBRARY
+    NAMES dmr libdmr
+    HINTS ${DMR_DIR}/lib
+    DOC "Path to dmrlib library"
+  )
+  if (NOT DMR_LIBRARY)
+    message(FATAL_ERROR 
+      "ENABLE_MALLEABILITY: found DMR_DIR=${DMR_DIR} but could not find libdmr inside it.")
+  endif()
+
+
+  message(STATUS "DMRlib headers : ${DMR_INCLUDE_DIR}")
+  message(STATUS "DMRlib library : ${DMR_LIBRARY}")
+
+  target_include_directories(QuEST PRIVATE ${DMR_INCLUDE_DIR})
+  target_link_libraries(QuEST PRIVATE ${DMR_LIBRARY})
+  target_compile_definitions(QuEST PRIVATE ENABLE_MALLEABILITY)
+
+   # rpath para que el ejecutable final encuentre libdmr.so en runtime
+   target_link_options(QuEST PRIVATE
+    "-Wl,-rpath,${DMR_DIR}/lib"
+    )
+   set_target_properties(QuEST PROPERTIES
+       BUILD_RPATH "${DMR_DIR}/lib"
+       INSTALL_RPATH "${DMR_DIR}/lib"
+   )
+endif()
+
 
 
 # CUDA
