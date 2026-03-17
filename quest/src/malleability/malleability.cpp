@@ -1,4 +1,5 @@
 #include "quest/src/malleability/malleability.hpp"
+//#include "quest/include/malleability.h"
 
 #ifdef ENABLE_MALLEABILITY
 
@@ -20,10 +21,19 @@ void finalize() {
     //TODO: some debug message
 }
 
-void init_malleability() {
+
+/* Static storage - set once via store_argc_argv(), read by init_malleability() */
+static int    s_argc = 0;
+static char **s_argv = NULL;
+
+extern "C" void store_argc_argv(int argc, char **argv) {
+    s_argc = argc;
+    s_argv = argv;
+}
+
+void init_malleability(void) {
 #ifdef ENABLE_MALLEABILITY
-    DMR_AUTO(dmr_init(0, nullptr), (void)NULL, restart(),
-             (void)NULL);
+    dmr_init(s_argc, s_argv);
 #endif
 }
 

@@ -5,7 +5,7 @@
 #SBATCH -o slurm4dmr.log
 
 # Edit configuration details if needed below
-#SBATCH --qos=gp_debug
+#SBATCH --qos=gp_bsccs
 #SBATCH -A bsc85
 
 # Developer debug information
@@ -33,7 +33,7 @@ SLURM_CONFDIR_BASE_DEFAULT="/home/bsc/bsc608120/workspaces/slurm/slurm-confdir-b
 
 
 # Name of the Slurm script to launch inside the nested instance of SLURM
-EXEC="submit_slurm.sh"
+EXEC="submit_slurm_malleable.sh"
 
 
 

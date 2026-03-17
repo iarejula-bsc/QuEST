@@ -47,6 +47,7 @@
 #include "quest/include/qureg.h"
 #include "quest/include/matrices.h"
 #include "quest/include/wrappers.h"
+#include "quest/include/malleability.h"
 
 
 #if INCLUDE_DEPRECATED_FUNCTIONS

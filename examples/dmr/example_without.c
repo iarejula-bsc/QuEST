@@ -8,7 +8,9 @@
 
 #include "quest.h"
 
-int main(void) {
+int main(int argc, char *argv[]) {
+
+  store_argc_argv(argc, argv);
 
   initQuESTEnv();
   reportQuESTEnv();
@@ -48,8 +50,6 @@ int main(void) {
   reportScalar("Total probability 3 (3 qbits)", prob);
 
   destroyQureg(qureg);
-
-
 
   finalizeQuESTEnv();
 
