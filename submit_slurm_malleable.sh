@@ -25,4 +25,4 @@ set -x
 #export DMR_PATH=$HOME/.local/dmr_jobs
 
 export OMP_NUM_THREADS=112
-$DMR_PATH/bin/dmr_wrapper mpirun --host $NODELIST_WITH_COUNTS  build-malleable-slurm4dmr/examples/dmr/example_without_c
+$DMR_PATH/bin/dmr_wrapper mpirun --host $NODELIST_WITH_COUNTS  build-malleable-slurm4dmr/examples/dmr/example_multi_c

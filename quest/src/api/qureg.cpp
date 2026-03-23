@@ -152,7 +152,7 @@ Qureg validateAndCreateCustomQureg(int numQubits, int isDensMatr, int useDistrib
         // if we are below the maximung this os a no-op
         // else it will shrink to the maximun allowed
         // TODO: in case it is not pow-2, decrease to the lower pow-2 
-        shrink_to(mem_getMaxNumNodesForQubits(numQubits));
+        mal_resize_to(mem_getMaxNumNodesForQubits(numQubits));
     #endif
 
     // ensure deployment is compatible with environment, considering available hardware and their memory capacities
