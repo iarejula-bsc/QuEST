@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --time=00:30:00
 #SBATCH --exclusive
-#SBATCH -N65
+#SBATCH -N33
 #SBATCH -o slurm4dmr.log
 
 # Edit configuration details if needed below

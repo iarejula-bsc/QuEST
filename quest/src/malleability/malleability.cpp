@@ -61,7 +61,9 @@ void mal_init(int argc, char **argv) {
                     "twice, ignoring.\n");
     return;
   }
-  dmr_init(argc, argv);
+  DMR_AUTO(dmr_init(argc, argv), (void)NULL, (void)NULL,
+             (void)NULL);
+
 #else
   (void)argc;
   (void)argv;
