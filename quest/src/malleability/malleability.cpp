@@ -89,29 +89,15 @@ void mal_resize_to(int target_nodes) {
   if (target_nodes < current) {
     int to_remove = current - target_nodes;
     dmr_set_nodes_next_shrink(to_remove);
-    DMR_AUTO(dmr_check(SHOULD_SHRINK), (void)NULL, (void)NULL, mal_finalize());
+    DMR_AUTO(dmr_check(SHOULD_SHRINK), (void)NULL, (void)NULL, (void)NULL);
   } else {
     int to_add = target_nodes - current;
     dmr_set_nodes_next_expand(to_add);
-    DMR_AUTO(dmr_check(SHOULD_EXPAND), (void)NULL, (void)NULL, mal_finalize());
+    DMR_AUTO(dmr_check(SHOULD_EXPAND), (void)NULL, (void)NULL, (void)NULL);
   }
 #else
   (void)target_nodes;
 #endif
-}
-
-int mal_get_current_nodes(void) {
-#ifdef ENABLE_MALLEABILITY
-  return dmr_get_current_node_count();
-#else
-  return getQuESTEnv().numNodes;
-#endif
-}
-
-int mal_max_nodes_for_qubits(int numQubits) {
-  int max_by_qubits = 1 << numQubits;
-  int env_nodes = getQuESTEnv().numNodes;
-  return (max_by_qubits < env_nodes) ? max_by_qubits : env_nodes;
 }
 
 // CircuitExecutor METHOD IMPLEMENTATIONS
@@ -137,27 +123,54 @@ void CircuitExecutor::add(Circuit circuit) {
   circuits_.push_back(circuit);
 }
 
+
 void CircuitExecutor::run() {
-  if (!initialized_) {
-    fprintf(stderr, "[malleability] ERROR: call circuit_executor_init() "
-                    "before circuit_executor_run().\n");
-    return;
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  // Solo rank 0 valida inicialización
+  if (rank == 0) {
+    if (!initialized_) {
+      fprintf(stderr, "[malleability] ERROR: call circuit_executor_init() "
+                      "before circuit_executor_run().\n");
+    }
   }
 
-  int start = checkpoint_load();
+  // Broadcast del estado de initialized_
+  MPI_Bcast(&initialized_, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+
+  if (!initialized_) return;
+
+  int start = 0;
+
+  // Solo rank 0 carga checkpoint
+  if (rank == 0) {
+    start = checkpoint_load();
+  }
+
+  // Rank 0 hace broadcast del start
+  MPI_Bcast(&start, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   for (int i = start; i < (int)circuits_.size(); i++) {
-    checkpoint_save(i);
+
+    // Solo rank 0 guarda checkpoint
+    if (rank == 0) {
+      checkpoint_save(i);
+    }
+
+    // Todos los ranks ejecutan el circuito
     circuits_[i]();
   }
 
-  checkpoint_clear();
+  // Solo rank 0 limpia checkpoint
+  if (rank == 0) {
+    checkpoint_clear();
+  }
 }
 
 void CircuitExecutor::destroy() {
   circuits_.clear();
   initialized_ = false;
-  mal_finalize();
 }
 
 /*

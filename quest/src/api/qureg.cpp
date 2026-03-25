@@ -22,6 +22,7 @@
 #include "quest/src/comm/comm_routines.hpp"
 #include "quest/src/cpu/cpu_config.hpp"
 #include "quest/src/gpu/gpu_config.hpp"
+#include <iostream>
 
 #include <string>
 #include <vector>
@@ -152,6 +153,7 @@ Qureg validateAndCreateCustomQureg(int numQubits, int isDensMatr, int useDistrib
         // if we are below the maximung this os a no-op
         // else it will shrink to the maximun allowed
         // TODO: in case it is not pow-2, decrease to the lower pow-2 
+        std::cout<<"need nodes: "<< mem_getMaxNumNodesForQubits(numQubits)<<std::endl;
         mal_resize_to(mem_getMaxNumNodesForQubits(numQubits));
     #endif
 
@@ -284,6 +286,8 @@ extern "C" {
 
 
 Qureg createCustomQureg(int numQubits, int isDensMatr, int useDistrib, int useGpuAccel, int useMultithread) {
+
+    std::cout<<"need nodes: "<< mem_getMaxNumNodesForQubits(numQubits)<<std::endl;
 
     return validateAndCreateCustomQureg(numQubits, isDensMatr, useDistrib, useGpuAccel, useMultithread, __func__);
 }
