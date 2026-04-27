@@ -6,6 +6,7 @@
  * @author Tyson Jones
  */
 #include "quest.h"
+#include "dmr.h"
 
 // Circuit with 2 qubits
 void circuit_2_qubits() {
@@ -67,14 +68,15 @@ int main(int argc, char *argv[]) {
   reportQuESTEnv();
   circuit_executor_init(argc, argv);
 
-  circuit_executor_add(circuit_2_qubits);
   circuit_executor_add(circuit_6_qubits);
+  circuit_executor_add(circuit_5_qubits);
   circuit_executor_add(circuit_4_qubits);
   circuit_executor_add(circuit_3_qubits);
-  circuit_executor_add(circuit_5_qubits);
+  circuit_executor_add(circuit_2_qubits);
   circuit_executor_run();
 
   circuit_executor_destroy();
   finalizeQuESTEnv();
+
   return 0;
 }

@@ -4,7 +4,7 @@
 
 
 # Number of nodes
-#SBATCH -N8
+#SBATCH -N64
 #SBATCH --output=quest_malleable_%j.log
 
 echo $DMR_PATH

@@ -22,6 +22,10 @@
 #include "quest/src/cpu/cpu_config.hpp"
 #include "quest/src/gpu/gpu_config.hpp"
 
+#ifdef ENABLE_MALLEABILITY
+#include <dmr.h>
+#endif
+
 #include <iostream>
 #include <typeinfo>
 #include <cstring>
@@ -94,8 +98,15 @@ void validateAndInitCustomQuESTEnv(int useDistrib, int useGpuAccel, int useMulti
     // and before any GPU initialisation and validation, since we will
     // perform that specifically upon the MPI-process-bound GPU(s). Further,
     // we can make sure validation errors are reported only by the root node.
-    if (useDistrib)
+    if (useDistrib){
         comm_init();
+
+#ifdef ENABLE_MALLEABILITY
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+#endif
+    }
 
     validate_newEnvDistributedBetweenPower2Nodes(caller);
 
@@ -436,6 +447,9 @@ void finalizeQuESTEnv() {
         gpu_finalizeCuQuantum();
 
     if (globalEnvPtr->isDistributed) {
+#ifdef ENABLE_MALLEABILITY
+  //dmr_finalize();
+#endif
         comm_sync();
         comm_end();
     }
