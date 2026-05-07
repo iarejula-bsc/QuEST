@@ -10,56 +10,116 @@
 
 // Circuit with 2 qubits
 void circuit_2_qubits() {
+
   Qureg qureg = createQureg(2);
   reportQuregParams(qureg);
+
+  DMRAnalytics *analytics_start;
+  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
+  dmr_print_analytics_from(analytics_start);
+  dmr_destroy_custom_analytics_event(analytics_start);
+
   initRandomPureState(qureg);
   reportQureg(qureg);
   qreal prob = calcTotalProb(qureg);
   reportScalar("Total probability (2 qubits)", prob);
+
+  DMRAnalytics *analytics_end;
+  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
+  dmr_print_analytics_from(analytics_end);
+  dmr_destroy_custom_analytics_event(analytics_end);
   destroyQureg(qureg);
 }
 
 // Circuit with 3 qubits
 void circuit_3_qubits() {
+
   Qureg qureg = createQureg(3);
   reportQuregParams(qureg);
+  
+  DMRAnalytics *analytics_start;
+  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
+  dmr_print_analytics_from(analytics_start);
+  dmr_destroy_custom_analytics_event(analytics_start);
+
   initRandomPureState(qureg);
   reportQureg(qureg);
   qreal prob = calcTotalProb(qureg);
   reportScalar("Total probability (3 qubits)", prob);
+
+  DMRAnalytics *analytics_end;
+  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
+  dmr_print_analytics_from(analytics_end);
+  dmr_destroy_custom_analytics_event(analytics_end);
   destroyQureg(qureg);
 }
 
 // Circuit with 4 qubits
 void circuit_4_qubits() {
+
   Qureg qureg = createQureg(4);
   reportQuregParams(qureg);
+
+  DMRAnalytics *analytics_start;
+  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
+  dmr_print_analytics_from(analytics_start);
+  dmr_destroy_custom_analytics_event(analytics_start);
+
   initRandomPureState(qureg);
   reportQureg(qureg);
   qreal prob = calcTotalProb(qureg);
   reportScalar("Total probability (4 qubits)", prob);
+
+  DMRAnalytics *analytics_end;
+  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
+  dmr_print_analytics_from(analytics_end);
+  dmr_destroy_custom_analytics_event(analytics_end);
   destroyQureg(qureg);
 }
 
 // Circuit with 5 qubits
 void circuit_5_qubits() {
+
   Qureg qureg = createQureg(5);
   reportQuregParams(qureg);
+
+  DMRAnalytics *analytics_start;
+  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
+  dmr_print_analytics_from(analytics_start);
+  dmr_destroy_custom_analytics_event(analytics_start);
+
   initRandomPureState(qureg);
   reportQureg(qureg);
   qreal prob = calcTotalProb(qureg);
   reportScalar("Total probability (5 qubits)", prob);
+
+  DMRAnalytics *analytics_end;
+  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
+  dmr_print_analytics_from(analytics_end);
+  dmr_destroy_custom_analytics_event(analytics_end);
   destroyQureg(qureg);
 }
 
 // Circuit with 6 qubits
 void circuit_6_qubits() {
+
+  DMRAnalytics *analytics_start;
   Qureg qureg = createQureg(6);
+
   reportQuregParams(qureg);
+  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
+  dmr_print_analytics_from(analytics_start);
+  dmr_destroy_custom_analytics_event(analytics_start);
+
   initRandomPureState(qureg);
   reportQureg(qureg);
   qreal prob = calcTotalProb(qureg);
   reportScalar("Total probability (6 qubits)", prob);
+
+  DMRAnalytics *analytics_end;
+  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
+  dmr_print_analytics_from(analytics_end);
+  dmr_destroy_custom_analytics_event(analytics_end);
   destroyQureg(qureg);
 }
 
@@ -67,16 +127,13 @@ int main(int argc, char *argv[]) {
   initQuESTEnv();
   reportQuESTEnv();
   circuit_executor_init(argc, argv);
-
+  circuit_executor_add(circuit_2_qubits);
   circuit_executor_add(circuit_6_qubits);
-  circuit_executor_add(circuit_5_qubits);
   circuit_executor_add(circuit_4_qubits);
   circuit_executor_add(circuit_3_qubits);
-  circuit_executor_add(circuit_2_qubits);
+  circuit_executor_add(circuit_5_qubits);
   circuit_executor_run();
-
   circuit_executor_destroy();
   finalizeQuESTEnv();
-
   return 0;
 }
