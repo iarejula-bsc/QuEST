@@ -9,6 +9,13 @@
 #include "dmr.h"
 #include <stdio.h>
 
+static void emit_analytics_event(const char *event_name) {
+  DMRAnalytics *analytics;
+  dmr_create_custom_analytics_event((char *) event_name, &analytics);
+  dmr_print_analytics_from(analytics);
+  dmr_destroy_custom_analytics_event(analytics);
+}
+
 static PauliStrSum create_heisenberg_ring_hamiltonian(int numQubits) {
   char *operators[] = {"XX", "YY", "ZZ", "Z"};
   qcomp coefficients[] = {.1, .2, .3, .4};
@@ -53,13 +60,9 @@ static void run_dynamics_like_circuit(int numQubits) {
   Qureg qureg = createQureg(numQubits);
   PauliStrSum hamil = create_heisenberg_ring_hamiltonian(numQubits);
   PauliStrSum observ = create_alternating_observable(numQubits);
-  DMRAnalytics *analytics_start;
-  DMRAnalytics *analytics_end;
 
   reportQuregParams(qureg);
-  dmr_create_custom_analytics_event("circuit_start", &analytics_start);
-  dmr_print_analytics_from(analytics_start);
-  dmr_destroy_custom_analytics_event(analytics_start);
+  emit_analytics_event("circuit_start");
 
   initPlusState(qureg);
 
@@ -82,9 +85,7 @@ static void run_dynamics_like_circuit(int numQubits) {
            numQubits);
   reportScalar(probLabel, calcTotalProb(qureg));
 
-  dmr_create_custom_analytics_event("circuit_end", &analytics_end);
-  dmr_print_analytics_from(analytics_end);
-  dmr_destroy_custom_analytics_event(analytics_end);
+  emit_analytics_event("circuit_end");
 
   destroyQureg(qureg);
   destroyPauliStrSum(hamil);
