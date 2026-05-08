@@ -68,8 +68,8 @@ static void run_dynamics_like_circuit(int numQubits) {
 
   qreal dt = 0.1;
   int order = 2;
-  int reps = 2;
-  int steps = 4;
+  int reps = 20;
+  int steps = 100;
 
   for (int s = 0; s < steps; s++) {
     applyTrotterizedUnitaryTimeEvolution(qureg, hamil, dt, order, reps);
