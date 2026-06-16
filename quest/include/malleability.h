@@ -25,10 +25,8 @@ void circuit_executor_init(int argc, char** argv);
 /** Add a circuit to be executed. */
 void circuit_executor_add(Circuit circuit);
 
-#ifdef ENABLE_MALLEABILITY
 /** Return the target node count for a circuit with the given qubit count. */
 int mal_target_nodes_for_qubits(int numQubits);
-#endif
 
 /** Run all circuits in order. Malleability is handled transparently. */
 void circuit_executor_run(void);

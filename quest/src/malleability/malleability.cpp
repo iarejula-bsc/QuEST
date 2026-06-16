@@ -28,6 +28,7 @@ static const char *MAL_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
 static bool global_mal_initialized = false;
 
 int mal_target_nodes_for_qubits(int numQubits) {
+#ifdef ENABLE_MALLEABILITY
   if (numQubits < 28)
     return 1;
 
@@ -36,6 +37,10 @@ int mal_target_nodes_for_qubits(int numQubits) {
     nodeExp = 6;
 
   return 1 << nodeExp;
+#else
+  (void)numQubits;
+  return 1;
+#endif
 }
 
 int checkpoint_load(void) {
