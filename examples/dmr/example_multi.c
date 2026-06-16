@@ -1,7 +1,8 @@
 /** @file
  * A minimum C/C++-agnostic example of running
  * QuEST, reporting the execution environment
- * and running a QFT circuit with varying qubit counts.
+ * and running QFT circuits that exercise the fixed
+ * malleability resize policy.
  *
  * @author Tyson Jones
  */
@@ -36,6 +37,9 @@ static void qft(Qureg qureg, int numQubits) {
 }
 
 static void run_qft_circuit(int numQubits) {
+  printf("\n[policy] %d qubits -> %d nodes\n", numQubits,
+         mal_target_nodes_for_qubits(numQubits));
+
   Qureg qureg = createQureg(numQubits);
 
   reportQuregParams(qureg);
@@ -54,25 +58,29 @@ static void run_qft_circuit(int numQubits) {
   destroyQureg(qureg);
 }
 
-void circuit_2_qubits() { run_qft_circuit(2); }
 
-void circuit_3_qubits() { run_qft_circuit(3); }
+void circuit_24_qubits() { run_qft_circuit(24); }
 
-void circuit_4_qubits() { run_qft_circuit(4); }
+void circuit_28_qubits() { run_qft_circuit(28); }
 
-void circuit_5_qubits() { run_qft_circuit(5); }
+void circuit_30_qubits() { run_qft_circuit(30); }
 
-void circuit_6_qubits() { run_qft_circuit(6); }
+void circuit_32_qubits() { run_qft_circuit(32); }
+
+void circuit_34_qubits() { run_qft_circuit(34); }
+
+void circuit_36_qubits() { run_qft_circuit(36); }
 
 int main(int argc, char *argv[]) {
   initQuESTEnv();
   reportQuESTEnv();
   circuit_executor_init(argc, argv);
-  circuit_executor_add(circuit_2_qubits);
-  circuit_executor_add(circuit_6_qubits);
-  circuit_executor_add(circuit_4_qubits);
-  circuit_executor_add(circuit_3_qubits);
-  circuit_executor_add(circuit_5_qubits);
+  circuit_executor_add(circuit_28_qubits);
+  circuit_executor_add(circuit_30_qubits);
+  circuit_executor_add(circuit_24_qubits);
+  circuit_executor_add(circuit_36_qubits);
+  circuit_executor_add(circuit_32_qubits);
+  circuit_executor_add(circuit_34_qubits);
   circuit_executor_run();
   circuit_executor_destroy();
   finalizeQuESTEnv();

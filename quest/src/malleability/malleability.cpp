@@ -27,6 +27,17 @@ static const char *MAL_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
 
 static bool global_mal_initialized = false;
 
+int mal_target_nodes_for_qubits(int numQubits) {
+  if (numQubits < 28)
+    return 1;
+
+  int nodeExp = numQubits - 26;
+  if (nodeExp > 6)
+    nodeExp = 6;
+
+  return 1 << nodeExp;
+}
+
 int checkpoint_load(void) {
   FILE *f = fopen(MAL_CHECKPOINT_FILE, "rb");
   if (!f)
