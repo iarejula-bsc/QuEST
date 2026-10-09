@@ -1,0 +1,33 @@
+--- a/src/dmr.c
++++ b/src/dmr.c
+@@ -26,6 +26,8 @@
+ #include "dmr.h"
+ #include "dmr_internal.h"
+ 
++#include <unistd.h>
++
+ static DMRState *dmr_state = NULL;
+ static DMRControllerState *controller_state = NULL;
+ 
+@@ -390,6 +392,21 @@
+                 return SET_LAST_ACTION(last_ret_action, DMR_NO_ACTION);
+             }
+ 
++            /* A release still in flight can hand its nodes back to the
++             * resource manager, which may grant them to this expand while
++             * the DVM is still removing them: the grant then adds nothing.
++             * Let every outstanding release finish first. */
++            if (dmr_state->is_root_process)
++            {
++                while (resource_outstanding_count(&controller_state->resources) > 0)
++                {
++                    debug_output("Waiting for %zu outstanding release(s) before expanding\n",
++                                 resource_outstanding_count(&controller_state->resources));
++                    usleep(100000);
++                    resource_sweep(&controller_state->resources);
++                }
++            }
++
+             if (dmr_state->is_root_process)
+             {
+                 record_analytics_event(DMR_EVENT_EXPAND_RESOURCES_START, __func__);

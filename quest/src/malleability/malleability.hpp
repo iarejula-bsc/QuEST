@@ -15,7 +15,7 @@
 #include <cstdlib>
 
 
-void mal_resize_to(int target_nodes);
+void mal_resize_for_qubits(int numQubits);
 int mal_target_nodes_for_qubits(int numQubits);
 
 // CircuitExecutor is a singleton class that manages the execution of circuits

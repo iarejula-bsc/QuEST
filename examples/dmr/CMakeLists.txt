@@ -11,3 +11,10 @@ target_link_libraries(benchmark_reconfig_c PUBLIC QuEST)
 # with DMR - needs QuEST + MPI + dmr
 add_executable(example_with_dmr_c example_with_dmr.c)
 target_link_libraries(example_with_dmr_c PUBLIC QuEST MPI::MPI_C dmr)
+
+# batch of QFT circuits for the paper's malleability table
+if (ENABLE_MALLEABILITY)
+  add_executable(qft_batch_c qft_batch.c)
+  target_include_directories(qft_batch_c PRIVATE ${DMR_INCLUDE_DIR})
+  target_link_libraries(qft_batch_c PUBLIC QuEST ${DMR_LIBRARY} m)
+endif()

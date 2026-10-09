@@ -149,7 +149,7 @@ Qureg validateAndCreateCustomQureg(int numQubits, int isDensMatr, int useDistrib
 
 
 #ifdef ENABLE_MALLEABILITY
-        mal_resize_to(mal_target_nodes_for_qubits(numQubits));
+        mal_resize_for_qubits(numQubits);
     #endif
 
     // ensure deployment is compatible with environment, considering available hardware and their memory capacities

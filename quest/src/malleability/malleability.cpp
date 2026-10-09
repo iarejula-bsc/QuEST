@@ -27,14 +27,48 @@ static const char *MAL_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
 
 static bool global_mal_initialized = false;
 
+#ifdef ENABLE_MALLEABILITY
+// DMR policy that sizes the job for the next Qureg: every rank sets the same
+// num_qubits before dmr_check(USE_POLICY), so run() decides identically on all.
+typedef struct {
+  int num_qubits;
+} QubitPolicyState;
+
+static QubitPolicyState qubit_policy_state = {0};
+static DMRPolicy qubit_policy;
+
+static DMRPolicySuggestion qubit_policy_run(DMRPolicy *policy,
+                                            DMRPolicyContext const *context) {
+  const QubitPolicyState *state = (const QubitPolicyState *)policy->state;
+  int target = mal_target_nodes_for_qubits(state->num_qubits);
+
+  if (target > context->current_nodes)
+    return dmr_policy_expand_to(target, 0, context);
+  if (target < context->current_nodes)
+    return dmr_policy_shrink_to(target, 0, context);
+  return dmr_policy_stay();
+}
+#endif
+
+// Resize policy parameters. The defaults are the MN5 experiment's; the
+// QUEST_MAL_* environment variables scale them down for small clusters.
+static int env_int_or(const char *name, int fallback) {
+  const char *value = getenv(name);
+  return (value && *value) ? atoi(value) : fallback;
+}
+
 int mal_target_nodes_for_qubits(int numQubits) {
 #ifdef ENABLE_MALLEABILITY
-  if (numQubits < 28)
+  static const int minQubits = env_int_or("QUEST_MAL_MIN_QUBITS", 28);
+  static const int baseQubits = env_int_or("QUEST_MAL_BASE_QUBITS", 26);
+  static const int maxNodeExp = env_int_or("QUEST_MAL_MAX_NODE_EXP", 6);
+
+  if (numQubits < minQubits)
     return 1;
 
-  int nodeExp = numQubits - 26;
-  if (nodeExp > 6)
-    nodeExp = 6;
+  int nodeExp = numQubits - baseQubits;
+  if (nodeExp > maxNodeExp)
+    nodeExp = maxNodeExp;
 
   return 1 << nodeExp;
 #else
@@ -80,6 +114,19 @@ void mal_init(int argc, char **argv) {
   DMR_AUTO(dmr_init(argc, argv), (void)NULL, (void)NULL,
              (void)NULL);
 
+  qubit_policy.name = "quest_qubits";
+  qubit_policy.state_size = sizeof(QubitPolicyState);
+  qubit_policy.state = &qubit_policy_state;
+  qubit_policy.populate = NULL;
+  qubit_policy.run = qubit_policy_run;
+  qubit_policy.save = NULL;
+  qubit_policy.load = NULL;
+  qubit_policy.destroy = NULL;
+  if (dmr_set_policy(&qubit_policy) != DMR_SUCCESS) {
+    fprintf(stderr, "[malleability] ERROR: dmr_set_policy() failed.\n");
+    exit(1);
+  }
+
 #else
   (void)argc;
   (void)argv;
@@ -96,23 +143,12 @@ void mal_finalize(void) {
   global_mal_initialized = false;
 }
 
-void mal_resize_to(int target_nodes) {
+void mal_resize_for_qubits(int numQubits) {
 #ifdef ENABLE_MALLEABILITY
-  int current = dmr_get_current_node_count();
-  if (target_nodes == current)
-    return;
-
-  if (target_nodes < current) {
-    int to_remove = current - target_nodes;
-    dmr_set_nodes_next_shrink(to_remove);
-    DMR_AUTO(dmr_check(SHOULD_SHRINK), (void)NULL, (void)NULL, (void)NULL);
-  } else {
-    int to_add = target_nodes - current;
-    dmr_set_nodes_next_expand(to_add);
-    DMR_AUTO(dmr_check(SHOULD_EXPAND), (void)NULL, (void)NULL, (void)NULL);
-  }
+  qubit_policy_state.num_qubits = numQubits;
+  DMR_AUTO(dmr_check(USE_POLICY), (void)NULL, (void)NULL, (void)NULL);
 #else
-  (void)target_nodes;
+  (void)numQubits;
 #endif
 }
 
@@ -186,6 +222,7 @@ void CircuitExecutor::run() {
 
 void CircuitExecutor::destroy() {
   circuits_.clear();
+  mal_finalize();
   initialized_ = false;
 }
 
