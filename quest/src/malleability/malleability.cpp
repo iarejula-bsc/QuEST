@@ -20,6 +20,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <unistd.h>
 
 static const char *MAL_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
 
@@ -145,6 +146,14 @@ void mal_finalize(void) {
 
 void mal_resize_for_qubits(int numQubits) {
 #ifdef ENABLE_MALLEABILITY
+  // A shrink hands its nodes back asynchronously. An expand requested before
+  // that finishes can be granted the same nodes while the DVM still removes
+  // them, and DMR then disables itself. Waiting before every expand lets the
+  // release finish; the wait falls outside every measured interval.
+  static const int expandDelay = env_int_or("QUEST_MAL_EXPAND_DELAY_S", 10);
+  if (mal_target_nodes_for_qubits(numQubits) > dmr_get_current_node_count())
+    sleep(expandDelay);
+
   qubit_policy_state.num_qubits = numQubits;
   DMR_AUTO(dmr_check(USE_POLICY), (void)NULL, (void)NULL, (void)NULL);
 #else

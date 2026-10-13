@@ -13,16 +13,12 @@
 exec > "${QFT_LOG:-${SLURM_SUBMIT_DIR}/qft_batch_dmr3_nested$SLURM_JOB_ID.log}" 2>&1
 
 QUEST_ROOT=${QUEST_ROOT:-$SLURM_SUBMIT_DIR}
-DMR_PATH=${DMR_V3_PATH:-$HOME/.local/dmrv3-qft}
 BINARY=${BINARY:-$QUEST_ROOT/build-dmr3-mn5/examples/dmr/qft_batch_c}
 
 module purge
 module load gcc/14.1.0_binutils241
 module use /apps/GPP/DMR/dmr-modules
-module load openpmix-for-dmr prrte-for-dmr openmpi-for-dmr
-
-export PATH=$DMR_PATH/bin:$PATH
-export LD_LIBRARY_PATH=$DMR_PATH/lib:$LD_LIBRARY_PATH
+module load dmrv3-dlb-gpp
 
 export DMR_PRINT_ANALYTICS=1
 export DMR_DEBUG_LEVEL=1
@@ -30,6 +26,8 @@ export DMR_PROCS_PER_NODE=1
 # Wait in dmr_check until an expansion is granted, so each circuit runs at
 # the size the policy chose
 export DMR_BLOCKING_REQ=1
+# Seconds to wait before each expand so the previous shrink's release finishes
+export QUEST_MAL_EXPAND_DELAY_S=${QUEST_MAL_EXPAND_DELAY_S:-10}
 export OMP_NUM_THREADS=112
 export TZ=Europe/Madrid
 
@@ -41,7 +39,7 @@ rm -f quest_circuit_checkpoint.bin
 
 NODELIST_WITH_COUNTS=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | awk -v n="$DMR_PROCS_PER_NODE" '{print $1 ":" n}' | paste -sd,)
 
-echo "# dmr: $DMR_PATH ($(cat "$DMR_PATH/COMMIT" 2>/dev/null))"
+echo "# dmr: $DMR_PATH ($(dmr_wrapper --version), libdmr $(readlink $DMR_PATH/lib/libdmr.so), $(stat -c %y $DMR_PATH/lib/libdmr.so.3.0.0))"
 echo "# quest: $(git -C "$QUEST_ROOT" rev-parse --short HEAD)"
 echo "# qubits: ${QUBITS[*]}"
 echo "# nodes: $SLURM_JOB_NUM_NODES"

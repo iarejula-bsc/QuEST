@@ -11,7 +11,7 @@
 #   sbatch experiments/qft_batch_dmr3/sbatch_mn5.sh [qubits...]
 # The malleable job's log is qft_batch_dmr3_<this job id>.log in the QuEST root.
 
-module use /apps/GPP/DMR/install/slurm4dmr-v3/share/modulefiles
+module use /apps/GPP/DMR/dmr-modules
 module load slurm4dmr
 
 export QUEST_ROOT=$SLURM_SUBMIT_DIR

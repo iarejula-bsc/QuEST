@@ -15,8 +15,8 @@
 
 QUEST_ROOT=${QUEST_ROOT:-$SLURM_SUBMIT_DIR}
 # The MiniDMR image exports DMR_PATH=/usr/local (its own DMR), so use our own variable
-DMR_PATH=${DMR_V3_PATH:-$HOME/.local/dmrv3-minidmr}
-BINARY=${BINARY:-$QUEST_ROOT/build-minidmr-dmr3/examples/dmr/qft_batch_c}
+DMR_PATH=${DMR_V3_PATH:-$HOME/.local/dmrv3-modlike}
+BINARY=${BINARY:-$QUEST_ROOT/build-minidmr-modlike/examples/dmr/qft_batch_c}
 
 export PATH=$DMR_PATH/bin:$PATH
 export LD_LIBRARY_PATH=$DMR_PATH/lib:$LD_LIBRARY_PATH
@@ -34,6 +34,10 @@ export QUEST_MAL_MAX_NODE_EXP=2
 
 export OMP_NUM_THREADS=1
 
+# Same as the MN5 dmrv3-dlb-gpp module: DLB/TALP preloaded
+export LD_PRELOAD=/usr/local/lib/libdlb_mpi.so
+export DLB_ARGS="--talp --quiet"
+
 QUBITS=("$@")
 [ ${#QUBITS[@]} -eq 0 ] && QUBITS=(11 12 8 13)
 
@@ -42,7 +46,7 @@ rm -f quest_circuit_checkpoint.bin
 
 NODELIST_WITH_COUNTS=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | awk -v n="$DMR_PROCS_PER_NODE" '{print $1 ":" n}' | paste -sd,)
 
-echo "# dmr: $(dmr_wrapper --version) at $DMR_PATH ($(cat $DMR_PATH/COMMIT 2>/dev/null))"
+echo "# dmr: $(dmr_wrapper --version) at $DMR_PATH"
 echo "# quest: $(git -C "$QUEST_ROOT" rev-parse --short HEAD)"
 echo "# qubits: ${QUBITS[*]}"
 
