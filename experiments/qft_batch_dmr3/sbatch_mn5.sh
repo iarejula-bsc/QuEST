@@ -9,6 +9,8 @@
 # Bring up Slurm4DMR v3 on this allocation (first node: nested controller,
 # other 64: compute) and run job_mn5.sh inside it. From the QuEST root:
 #   sbatch experiments/qft_batch_dmr3/sbatch_mn5.sh [qubits...]
+# With at most 32 nodes:
+#   QUEST_MAL_MAX_NODE_EXP=5 sbatch -N33 experiments/qft_batch_dmr3/sbatch_mn5.sh [qubits...]
 # The malleable job's log is qft_batch_dmr3_<this job id>.log in the QuEST root.
 
 module use /apps/GPP/DMR/dmr-modules

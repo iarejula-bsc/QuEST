@@ -83,8 +83,9 @@ def main():
             rows.append((q, nodes, exec_t, "–", "–", "–"))
 
     if initial:
+        acq = f", acquisition {initial[2]:.3f} s" if initial[2] is not None else ""
         print(f"# initial reconfiguration (launch → {initial[0]} nodes): "
-              f"{initial[1]:.3f} s", file=sys.stderr)
+              f"{initial[1]:.3f} s{acq}", file=sys.stderr)
 
     if "--latex" in sys.argv:
         print(r"Qubits & Nodes & Execution Time (s) & Transition & Reconfiguration Time (s) \\ \hline")

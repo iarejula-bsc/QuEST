@@ -1,13 +1,15 @@
 #!/bin/bash
-#SBATCH -N64
+#SBATCH -N1
 #SBATCH --exclusive
 #SBATCH --time=02:00:00
 #SBATCH -o /dev/null
 
-# qft_batch on 64 nodes of the nested Slurm4DMR v3 instance, submitted by
-# sbatch_mn5.sh. Nested job ids restart at 1 on every instance, so the log is
-# named after the host job instead (QFT_LOG, set by sbatch_mn5.sh).
-#   q < 28 -> 1 node, q >= 28 -> 2^(q-26) nodes, capped at 64
+# qft_batch in the nested Slurm4DMR v3 instance, submitted by sbatch_mn5.sh.
+# It starts on 1 node and DMR expands it to the size of the first circuit; the
+# rest of the instance's nodes stay free for the expansions. Nested job ids
+# restart at 1 on every instance, so the log is named after the host job
+# instead (QFT_LOG, set by sbatch_mn5.sh).
+#   q < 28 -> 1 node, q >= 28 -> 2^(q-26) nodes, capped at 2^QUEST_MAL_MAX_NODE_EXP (64)
 # Default batch 28 30 24 34 -> 4, 16, 1, 64 nodes.
 
 exec > "${QFT_LOG:-${SLURM_SUBMIT_DIR}/qft_batch_dmr3_nested$SLURM_JOB_ID.log}" 2>&1
