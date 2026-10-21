@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -N1
 #SBATCH --exclusive
-#SBATCH --time=01:00:00
+#SBATCH --time=00:50:00
 #SBATCH -o /dev/null
 
 # reconfig_matrix in the nested Slurm4DMR v3 instance, submitted by
@@ -27,7 +27,7 @@ export DMR_PROCS_PER_NODE=1
 # the size the policy chose
 export DMR_BLOCKING_REQ=1
 # Seconds to wait before each expand so the previous shrink's release finishes
-export QUEST_MAL_EXPAND_DELAY_S=${QUEST_MAL_EXPAND_DELAY_S:-10}
+export QUEST_MAL_EXPAND_DELAY_S=${QUEST_MAL_EXPAND_DELAY_S:-30}
 # 27 qubits -> 2 nodes, so every power of two up to 64 is reachable
 export QUEST_MAL_MIN_QUBITS=27
 export QUEST_MAL_BASE_QUBITS=26

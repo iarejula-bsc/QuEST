@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -N65
 #SBATCH --exclusive
-#SBATCH --time=01:00:00
+#SBATCH --time=00:50:00
 #SBATCH --qos=gp_bsccs
 #SBATCH -A bsc85
 #SBATCH -o slurm4dmr_%j.out
