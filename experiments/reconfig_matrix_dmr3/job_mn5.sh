@@ -26,8 +26,11 @@ export DMR_PROCS_PER_NODE=1
 # Wait in dmr_check until an expansion is granted, so each step runs at
 # the size the policy chose
 export DMR_BLOCKING_REQ=1
-# Seconds to wait before each expand so the previous shrink's release finishes
-export QUEST_MAL_EXPAND_DELAY_S=${QUEST_MAL_EXPAND_DELAY_S:-30}
+# Seconds each step stays on its allocation before the next reconfiguration,
+# so the previous release finishes; outside every measured interval
+export QUEST_MATRIX_STEP_SLEEP_S=${QUEST_MATRIX_STEP_SLEEP_S:-10}
+# Extra seconds before each expand (shrink -> expand race in DMR v3)
+export QUEST_MAL_EXPAND_DELAY_S=${QUEST_MAL_EXPAND_DELAY_S:-10}
 # 27 qubits -> 2 nodes, so every power of two up to 64 is reachable
 export QUEST_MAL_MIN_QUBITS=27
 export QUEST_MAL_BASE_QUBITS=26

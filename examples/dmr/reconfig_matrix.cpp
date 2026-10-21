@@ -11,6 +11,10 @@
  *
  *   reconfig_matrix_cpp [--reps=R] [node counts...]
  *
+ * QUEST_MATRIX_STEP_SLEEP_S (default 0) makes every step wait that many
+ * seconds on its new allocation before the next reconfiguration starts, in
+ * place of the computation a real circuit would do there.
+ *
  * @author Íñigo Aréjula Aísa
  */
 #include "quest.h"
@@ -20,6 +24,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -29,6 +34,7 @@ constexpr int MAX_STEPS = 512;
 
 std::vector<int> stepNodes;
 std::vector<int> stepQubits;
+unsigned int stepSleep = 0;
 
 void emit_analytics_event(const char *event_name) {
   DMRAnalytics *analytics;
@@ -83,6 +89,7 @@ void run_step(int step) {
 
   Qureg qureg = createQureg(qubits);
   emit_analytics_event("step_start");
+  sleep(stepSleep);
   destroyQureg(qureg);
 }
 
@@ -107,6 +114,8 @@ int main(int argc, char *argv[]) {
   }
   if (nodeCounts.empty())
     nodeCounts = {1, 2, 4, 8, 16, 32, 64};
+  if (const char *value = getenv("QUEST_MATRIX_STEP_SLEEP_S"))
+    stepSleep = (unsigned int)atoi(value);
 
   initQuESTEnv();
   circuit_executor_init(argc, argv);
