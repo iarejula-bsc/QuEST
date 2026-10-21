@@ -21,6 +21,7 @@
 #include "dmr.h"
 
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -31,6 +32,11 @@
 namespace {
 
 constexpr int MAX_STEPS = 512;
+
+double wall_time() {
+  using namespace std::chrono;
+  return duration<double>(system_clock::now().time_since_epoch()).count();
+}
 
 std::vector<int> stepNodes;
 std::vector<int> stepQubits;
@@ -104,6 +110,10 @@ make_steps(std::integer_sequence<int, Is...>) {
 } // namespace
 
 int main(int argc, char *argv[]) {
+  // Wall-clock times on the same scale as the DMR analytics timestamps: the
+  // start of this process and the end of QuEST's environment setup, which
+  // both fall inside the reconfiguration time of a respawned process
+  double mainTime = wall_time();
   int reps = 1;
   std::vector<int> nodeCounts;
   for (int i = 1; i < argc; i++) {
@@ -118,6 +128,11 @@ int main(int argc, char *argv[]) {
     stepSleep = (unsigned int)atoi(value);
 
   initQuESTEnv();
+  double questEnvTime = wall_time();
+  const char *rank = getenv("PMIX_RANK");
+  if (rank && strcmp(rank, "0") == 0)
+    printf("[matrix] process times: main %.6f quest_env %.6f\n", mainTime,
+           questEnvTime);
   circuit_executor_init(argc, argv);
 
   std::vector<int> order = eulerian_circuit((int)nodeCounts.size());
