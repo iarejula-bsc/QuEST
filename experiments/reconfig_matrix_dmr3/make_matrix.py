@@ -2,7 +2,10 @@
 """Build the from x to reconfiguration matrices from the log of
 examples/dmr/reconfig_matrix_cpp run on DMR v3.
 
-Usage: python3 make_matrix.py <log> [--latex] [--csv FILE]
+Usage: python3 make_matrix.py <log> [<log> ...] [--latex] [--csv FILE]
+
+Several logs (e.g. one job per pair of node counts) are merged into one
+matrix.
 
 Overhead: from the dmr_check that decides the reconfiguration
 (DMR_EVENT_EXPAND_RESOURCES_START or DMR_EVENT_SHRINK_TRIGGERED) to
@@ -20,6 +23,10 @@ When the log has the "[matrix] process times" lines, the respawn is split at
 rank 0 of the new processes into launch (DMR_EVENT_SPAWN_START -> start of
 main), QuEST environment (start of main -> end of initQuESTEnv, which includes
 MPI_Init) and DMR init (end of initQuESTEnv -> DMR_EVENT_RECONFIG_COMPLETE).
+
+The "allocations" column is the number of resource-manager allocations
+(nested Slurm jobs) the new processes find when they start, from DMR's
+"PMIx resource discovery found N allocation(s)" debug line.
 """
 import re
 import statistics
@@ -29,14 +36,20 @@ ANALYTICS = re.compile(
     r"^\[DMR ANALYTICS\],([0-9.]+),([^,]+),([^,]+),(-?\d+),(-?\d+),(-?[0-9.]+),")
 HEADER = re.compile(r"^# matrix (nodes|sequence): (.*)$")
 PROCESS = re.compile(r"^\[matrix\] process times: main ([0-9.]+) quest_env ([0-9.]+)")
+ALLOCATIONS = re.compile(r"PMIx resource discovery found (\d+) allocation")
 
 
 def parse(path):
     nodes, sequence, samples = None, None, []
     current = None
     acquire_start = acquire = decided = spawn_start = process = None
+    allocations = None
     with open(path, errors="replace") as f:
         for line in f:
+            m = ALLOCATIONS.search(line)
+            if m:
+                allocations = int(m.group(1))
+                continue
             m = HEADER.match(line)
             if m:
                 values = [int(v) for v in m.group(2).split()]
@@ -75,7 +88,7 @@ def parse(path):
                     quest_env = process[1] - process[0]
                     dmr_init = ts - process[1]
                 samples.append((current, world, reconf, acquire, overhead,
-                                launch, quest_env, dmr_init))
+                                launch, quest_env, dmr_init, allocations))
                 current, acquire, decided = world, None, None
                 spawn_start = process = None
     return nodes, sequence, samples
@@ -121,17 +134,30 @@ def print_latex(nodes, values):
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    nodes, sequence, samples = parse(sys.argv[1])
-    if not sequence:
-        sys.exit("no '# matrix sequence' line in the log")
+    logs, skip = [], False
+    for arg in sys.argv[1:]:
+        if skip:
+            skip = False
+        elif arg == "--csv":
+            skip = True
+        elif not arg.startswith("--"):
+            logs.append(arg)
 
-    expected = list(zip(sequence, sequence[1:]))
-    observed = [(s[0], s[1]) for s in samples]
-    if observed != expected[:len(observed)]:
-        print("warning: reconfigurations do not follow the planned sequence",
-              file=sys.stderr)
-    print(f"# {len(observed)} of {len(expected)} planned reconfigurations",
-          file=sys.stderr)
+    nodes, samples = set(), []
+    for log in logs:
+        log_nodes, sequence, log_samples = parse(log)
+        if not sequence:
+            sys.exit(f"{log}: no '# matrix sequence' line")
+        expected = list(zip(sequence, sequence[1:]))
+        observed = [(s[0], s[1]) for s in log_samples]
+        if observed != expected[:len(observed)]:
+            print(f"warning: {log}: reconfigurations do not follow the planned "
+                  "sequence", file=sys.stderr)
+        print(f"# {log}: {len(observed)} of {len(expected)} planned "
+              "reconfigurations", file=sys.stderr)
+        nodes.update(log_nodes)
+        samples += log_samples
+    nodes = sorted(nodes)
 
     reconf = matrix(nodes, samples, 2)
     acquire = matrix(nodes, samples, 3)
@@ -140,10 +166,11 @@ def main():
     if "--csv" in sys.argv:
         with open(sys.argv[sys.argv.index("--csv") + 1], "w") as f:
             f.write("from,to,reconfiguration_s,acquisition_s,overhead_s,"
-                    "launch_s,quest_env_s,dmr_init_s\n")
-            for a, b, r, *rest in samples:
+                    "launch_s,quest_env_s,dmr_init_s,allocations\n")
+            for a, b, r, *rest, allocs in samples:
                 f.write(f"{a},{b},{r}," + ",".join(
-                    "" if v is None else f"{v:.6f}" for v in rest) + "\n")
+                    "" if v is None else f"{v:.6f}" for v in rest) +
+                    f",{'' if allocs is None else allocs}\n")
 
     if "--latex" in sys.argv:
         print_latex(nodes, overhead)
@@ -158,6 +185,9 @@ def main():
                            nodes, matrix(nodes, samples, 6))
             print_markdown("DMR init: end of initQuESTEnv -> RECONFIG_COMPLETE (s)",
                            nodes, matrix(nodes, samples, 7))
+        if any(s[8] is not None for s in samples):
+            print_markdown("Allocations found by the new processes", nodes,
+                           matrix(nodes, samples, 8))
 
 
 if __name__ == "__main__":
