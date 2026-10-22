@@ -11,15 +11,17 @@ NODES=("$@")
 # Seconds between pairs, so the nodes the previous pair released are back to
 # idle before the next one asks for them
 PAIR_PAUSE_S=${PAIR_PAUSE_S:-20}
+# Time limit of each pair's nested job, so a hang costs one pair, not the run
+PAIR_TIME=${PAIR_TIME:-00:15:00}
 
 for ((i = 0; i < ${#NODES[@]}; i++)); do
   for ((j = i + 1; j < ${#NODES[@]}; j++)); do
     a=${NODES[i]} b=${NODES[j]}
     seq=$a
     for ((r = 0; r < REPS; r++)); do seq+=,$b,$a; done
-    log=$QUEST_ROOT/reconfig_matrix_dmr3_${SLURM_JOB_ID}_${a}_${b}.log
-    echo "# pair $a $b: $(date +%T) -> $log"
-    sbatch --wait -N "$a" --export=ALL,MATRIX_LOG="$log" \
+    export MATRIX_LOG=$QUEST_ROOT/reconfig_matrix_dmr3_${MATRIX_HOST_JOB}_${a}_${b}.log
+    echo "# pair $a $b: $(date +%T) -> $MATRIX_LOG"
+    sbatch --wait -N "$a" --time="$PAIR_TIME" \
       "$QUEST_ROOT/experiments/reconfig_matrix_dmr3/job_mn5.sh" --sequence="$seq"
     echo "# pair $a $b: exit $? at $(date +%T)"
     sleep "$PAIR_PAUSE_S"

@@ -21,6 +21,8 @@ module use /apps/GPP/DMR/dmr-modules
 module load slurm4dmr
 
 export QUEST_ROOT=$SLURM_SUBMIT_DIR
+# The nested instance runs the driver without the host job's SLURM_* variables
+export MATRIX_HOST_JOB=$SLURM_JOB_ID
 export TZ=Europe/Madrid
 # Flat PRRTE routing tree: works around the dropped-WIREUP hang after a grow
 # (validated not to change the measured times up to 16 nodes)
