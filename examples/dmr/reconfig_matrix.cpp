@@ -10,6 +10,10 @@
  * size the job is launched with.
  *
  *   reconfig_matrix_cpp [--reps=R] [node counts...]
+ *   reconfig_matrix_cpp --sequence=1,4,2,4,...
+ *
+ * --sequence replaces the Eulerian circuit with the given node counts, in
+ * order; the first one is the size the job is launched with.
  *
  * QUEST_MATRIX_STEP_SLEEP_S (default 0) makes every step wait that many
  * seconds on its new allocation before the next reconfiguration starts, in
@@ -20,12 +24,15 @@
 #include "quest.h"
 #include "dmr.h"
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -119,6 +126,12 @@ int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "--reps=", 7) == 0)
       reps = atoi(argv[i] + 7);
+    else if (strncmp(argv[i], "--sequence=", 11) == 0) {
+      // Parse a copy: DMR passes argv on to the respawned processes
+      std::stringstream list(argv[i] + 11);
+      for (std::string tok; std::getline(list, tok, ',');)
+        stepNodes.push_back(atoi(tok.c_str()));
+    }
     else
       nodeCounts.push_back(atoi(argv[i]));
   }
@@ -135,10 +148,18 @@ int main(int argc, char *argv[]) {
            questEnvTime);
   circuit_executor_init(argc, argv);
 
-  std::vector<int> order = eulerian_circuit((int)nodeCounts.size());
-  for (int r = 0; r < reps; r++)
-    for (size_t k = (r == 0) ? 0 : 1; k < order.size(); k++)
-      stepNodes.push_back(nodeCounts[order[k]]);
+  if (stepNodes.empty()) {
+    std::vector<int> order = eulerian_circuit((int)nodeCounts.size());
+    for (int r = 0; r < reps; r++)
+      for (size_t k = (r == 0) ? 0 : 1; k < order.size(); k++)
+        stepNodes.push_back(nodeCounts[order[k]]);
+  } else {
+    nodeCounts.assign(stepNodes.begin(), stepNodes.end());
+    std::sort(nodeCounts.begin(), nodeCounts.end());
+    nodeCounts.erase(std::unique(nodeCounts.begin(), nodeCounts.end()),
+                     nodeCounts.end());
+    reps = 1;
+  }
 
   if ((int)stepNodes.size() > MAX_STEPS) {
     fprintf(stderr, "reconfig_matrix: %zu steps, at most %d\n",

@@ -51,5 +51,18 @@ echo "# prrte: $(prte_info 2>/dev/null | sed -n 's/.*PRRTE repo revision: //p')"
 echo "# quest: $(git -C "$QUEST_ROOT" rev-parse --short HEAD)"
 echo "# args: ${ARGS[*]}"
 
+# DMR_DEBUG_PRTE=1: run prte through a copy of dmr_wrapper that keeps its
+# output and the prted daemons' in <log>.prte.log instead of /dev/null
+WRAPPER=dmr_wrapper
+if [ "${DMR_DEBUG_PRTE:-0}" = 1 ]; then
+  WRAPPER=$HOME/.cache/dmr_wrapper_debug_$SLURM_JOB_ID.$$
+  mkdir -p "$(dirname "$WRAPPER")"
+  bash "$QUEST_ROOT/experiments/reconfig_matrix_dmr3/repro/make_debug_wrapper.sh" "$WRAPPER" || exit 1
+  export DMR_PRTE_LOG=${MATRIX_LOG:-$SLURM_SUBMIT_DIR/reconfig_matrix_dmr3_nested$SLURM_JOB_ID.log}
+  DMR_PRTE_LOG=${DMR_PRTE_LOG%.log}.prte.log
+  export DMR_PRTE_EXTRA=${DMR_PRTE_EXTRA:---leave-session-attached --prtemca plm_base_verbose 5}
+  echo "# prte log: $DMR_PRTE_LOG"
+fi
+
 set -x
-dmr_wrapper mpirun --host "$NODELIST_WITH_COUNTS" "$BINARY" "${ARGS[@]}"
+"$WRAPPER" mpirun --host "$NODELIST_WITH_COUNTS" "$BINARY" "${ARGS[@]}"
