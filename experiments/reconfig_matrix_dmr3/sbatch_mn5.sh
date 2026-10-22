@@ -19,14 +19,5 @@ export MATRIX_LOG=$QUEST_ROOT/reconfig_matrix_dmr3_$SLURM_JOB_ID.log
 export TZ=Europe/Madrid
 
 cd "$QUEST_ROOT"
-# START_NODES=N launches the malleable job on N nodes of the nested instance
-# instead of 1, through a copy of job_mn5.sh with that node count: the nested
-# sbatch takes no -N from the environment
-JOB_SCRIPT=$QUEST_ROOT/experiments/reconfig_matrix_dmr3/job_mn5.sh
-if [ "${START_NODES:-1}" != 1 ]; then
-  START_SCRIPT=$QUEST_ROOT/experiments/reconfig_matrix_dmr3/.job_mn5_start${START_NODES}_$SLURM_JOB_ID.sh
-  sed "s/^#SBATCH -N1\$/#SBATCH -N$START_NODES/" "$JOB_SCRIPT" > "$START_SCRIPT"
-  JOB_SCRIPT=$START_SCRIPT
-fi
-bash "$SDV3_PATH/share/nested-slurm/start_slurm4dmr.sh" "$JOB_SCRIPT" "$@"
-[ -n "${START_SCRIPT:-}" ] && rm -f "$START_SCRIPT"
+bash "$SDV3_PATH/share/nested-slurm/start_slurm4dmr.sh" \
+  "$QUEST_ROOT/experiments/reconfig_matrix_dmr3/job_mn5.sh" "$@"
