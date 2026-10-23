@@ -22,7 +22,14 @@
 #include <cstdlib>
 #include <unistd.h>
 
-static const char *MAL_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
+static const char *MAL_DEFAULT_CHECKPOINT_FILE = "quest_circuit_checkpoint.bin";
+
+// Jobs sharing a working directory need distinct files, so the path can be set
+// with QUEST_MAL_CHECKPOINT_FILE
+static const char *checkpoint_path(void) {
+  const char *path = getenv("QUEST_MAL_CHECKPOINT_FILE");
+  return (path && *path) ? path : MAL_DEFAULT_CHECKPOINT_FILE;
+}
 
 // PRIVATE STATE
 
@@ -79,7 +86,7 @@ int mal_target_nodes_for_qubits(int numQubits) {
 }
 
 int checkpoint_load(void) {
-  FILE *f = fopen(MAL_CHECKPOINT_FILE, "rb");
+  FILE *f = fopen(checkpoint_path(), "rb");
   if (!f)
     return 0;
   int index = 0;
@@ -89,14 +96,14 @@ int checkpoint_load(void) {
 }
 
 void checkpoint_save(int index) {
-  FILE *f = fopen(MAL_CHECKPOINT_FILE, "wb");
+  FILE *f = fopen(checkpoint_path(), "wb");
   if (!f)
     return;
   fwrite(&index, sizeof(int), 1, f);
   fclose(f);
 }
 
-void checkpoint_clear(void) { remove(MAL_CHECKPOINT_FILE); }
+void checkpoint_clear(void) { remove(checkpoint_path()); }
 
 void mal_init(int argc, char **argv) {
 #ifdef ENABLE_MALLEABILITY

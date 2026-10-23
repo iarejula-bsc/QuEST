@@ -42,7 +42,9 @@ ARGS=("$@")
 [ ${#ARGS[@]} -eq 0 ] && ARGS=(--reps=${REPS:-3})
 
 cd "$QUEST_ROOT"
-rm -f quest_circuit_checkpoint.bin
+# One executor checkpoint per job: jobs share this working directory
+export QUEST_MAL_CHECKPOINT_FILE=$QUEST_ROOT/quest_circuit_checkpoint_${MATRIX_HOST_JOB:+${MATRIX_HOST_JOB}_}$SLURM_JOB_ID.bin
+rm -f "$QUEST_MAL_CHECKPOINT_FILE"
 
 NODELIST_WITH_COUNTS=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | awk -v n="$DMR_PROCS_PER_NODE" '{print $1 ":" n}' | paste -sd,)
 

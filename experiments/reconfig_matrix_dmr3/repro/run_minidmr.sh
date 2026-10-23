@@ -45,7 +45,9 @@ SEQUENCE=1
 for ((c = 0; c < CYCLES; c++)); do SEQUENCE+=,4,2; done
 
 cd "$QUEST_ROOT"
-rm -f quest_circuit_checkpoint.bin
+# One executor checkpoint per job: jobs share this working directory
+export QUEST_MAL_CHECKPOINT_FILE=$QUEST_ROOT/quest_circuit_checkpoint_${MATRIX_HOST_JOB:+${MATRIX_HOST_JOB}_}$SLURM_JOB_ID.bin
+rm -f "$QUEST_MAL_CHECKPOINT_FILE"
 WRAPPER=$HOME/.cache/dmr_wrapper_debug_$SLURM_JOB_ID
 mkdir -p "$(dirname "$WRAPPER")"
 bash "$REPRO_DIR/make_debug_wrapper.sh" "$WRAPPER" || exit 1
