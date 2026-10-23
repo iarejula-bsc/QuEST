@@ -24,9 +24,9 @@ export QUEST_ROOT=$SLURM_SUBMIT_DIR
 # The nested instance runs the driver without the host job's SLURM_* variables
 export MATRIX_HOST_JOB=$SLURM_JOB_ID
 export TZ=Europe/Madrid
-# Flat PRRTE routing tree: works around the dropped-WIREUP hang after a grow
-# (validated not to change the measured times up to 16 nodes)
-export PRTE_MCA_rml_base_radix=${PRTE_MCA_rml_base_radix:-1024}
+# PRRTE before the dropped-WIREUP fix can hang after a grow; there, submit with
+# PRTE_MCA_rml_base_radix=1024 (flat routing tree, validated not to change the
+# measured times up to 16 nodes). With a fixed PRRTE, keep the default radix.
 
 cd "$QUEST_ROOT"
 bash "$SDV3_PATH/share/nested-slurm/start-nested-slurm.sh" \
